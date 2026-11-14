@@ -13,23 +13,6 @@ A Python ETL pipeline that reads financial transactions from CSV files, validate
 - Testing with pytest 
 
 ## Project Structure
-finance-project/
-├── app/
-│   ├── __init__.py
-│   ├── cleaning.py
-│   ├── ingestion.py
-│   └── export.py
-├── data/
-│   ├── transactions.csv
-│   ├── clean_transactions.csv
-│   └── rejected_transactions.csv
-├── tests/
-│   ├── test_cleaning.py
-│   ├── test_ingestion.py
-│   ├── test_export.py
-│   └── test_pipeline.py
-├── main.py
-└── README.md 
 ### Application Modules  
 - ingestion.py: reads transaction data from CSV files normalizes values into appropriate Python data types.
 - cleaning.py: validates transaction records and identifies invalid records (missing customer ids, missing transaction ids, duplicate transaction ids, invalid amounts).
