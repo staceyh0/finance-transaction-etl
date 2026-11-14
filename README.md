@@ -49,7 +49,7 @@ The pipeline reads data/transactions.csv and generates two output files:
 ## Testing 
 Install pytest if necessary:
 ```bash
-python -m pip install pytest
+python -m pip install -r requirements.txt
 ```
 Run all automated tests:
 ```bash
