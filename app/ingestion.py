@@ -1,6 +1,19 @@
 import csv 
 
 def read_transactions(file_path): 
+    """
+    Read financial transactions from a CSV file.
+
+    Converts transaction and customer IDs to integers and
+    transaction amounts to floats. Invalid numeric values
+    are represented as None for downstream validation.
+
+    Args:
+        file_path (str): Path to the input CSV file.
+
+    Returns:
+        list[dict]: Transactions represented as dictionaries.
+    """
     transactions = [] 
 
     with open(file_path, "r", newline="") as file:

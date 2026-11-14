@@ -5,9 +5,25 @@ from app.cleaning import clean_transactions
 from app.export import write_transactions
 
 def run_pipeline(input_path, valid_path, rejected_path):
+    """
+    Execute the financial transaction ETL pipeline.
+
+    Reads raw transactions, validates and separates records,
+    logs processing results, and exports valid and rejected
+    transactions into separate CSV files.
+
+    Args:
+        input_path (str): Path to the source CSV file.
+        valid_path (str): Destination for valid transactions.
+        rejected_path (str): Destination for rejected transactions.
+
+    Returns:
+        dict: Cleaning results containing valid transactions,
+        rejected transactions, and processing statistics.
+    """
     logging.basicConfig ( 
-    level = logging.INFO, 
-    format= "%(levelname)s: %(message)s"
+        level = logging.INFO, 
+        format= "%(levelname)s: %(message)s"
     )
 
     logging.info("Starting transaction pipeline")
@@ -16,7 +32,7 @@ def run_pipeline(input_path, valid_path, rejected_path):
         transactions = read_transactions(input_path)
         logging.info("Read %d transactions", len(transactions))
     except FileNotFoundError: 
-        logging.error("Input CSV file was not found.")
+        logging.exception("Input CSV file was not found.")
         raise
 
     result = clean_transactions(transactions)
@@ -35,15 +51,20 @@ def run_pipeline(input_path, valid_path, rejected_path):
             "Rejected %d invalid transactions", 
             rejected_rows
         )
-        missing = result["summary"]["missing_customer_id"]
-        if missing > 0:
+        missing_customer_id = result["summary"]["missing_customer_id"]
+        if missing_customer_id > 0:
             logging.warning(
-                "Missing customer ID: %d", missing
+                "Missing customer ID: %d", missing_customer_id
             )
         invalid = result["summary"]["invalid_amount"]
         if invalid > 0: 
             logging.warning(
                 "Invalid amount: %d", invalid
+            )
+        missing_transaction_id = result["summary"]["missing_transaction_id"]
+        if missing_transaction_id > 0:
+            logging.warning(
+                "Missing transaction ID: %d", missing_transaction_id
             )
         duplicate = result["summary"]["duplicate_transactions"]
         if duplicate > 0: 
@@ -56,24 +77,25 @@ def run_pipeline(input_path, valid_path, rejected_path):
             result["valid_transactions"], 
         )
         logging.info("Exported cleaned transactions")
-    except FileNotFoundError: 
-        logging.error("Failed to export transactions.")
+    except OSError: 
+        logging.exception("Failed to export transactions.")
         raise 
-    try: 
+    try:
         write_transactions(
-        rejected_path,
-        result["rejected_transactions"], 
-                fieldnames = [
+            rejected_path,
+            result["rejected_transactions"],
+            fieldnames=[
                 "transaction_id",
-                "customer_id", 
-                "amount", 
-                "rejection_reason"
-            ]
+                "customer_id",
+                "amount",
+                "rejection_reason",
+            ],
         )
-    except FileNotFoundError: 
-        logging.error("Failed to export rejected transactions.")
-        raise 
-
+        logging.info("Exported rejected transactions")
+    except OSError:
+        logging.exception("Failed to export rejected transactions")
+        raise
+        
     return result
 
 

@@ -1,25 +1,20 @@
 import math 
 def clean_transactions(transactions): 
     """
-    Validate transactions and identifies invalid records, 
+    Validate and separate financial transactions.
+
+    Checks transactions for missing customer IDs, invalid
+    amounts, and duplicate transaction IDs. Records rejection
+    reasons and calculates a summary of validation results.
 
     Args:
-    transactions (list[dict]): A list of transaction records.
-        Each transaction must contain:
-        - transaction_id: Unique transaction identifier.
-        - customer_id: Customer identifier.
-        - amount: Numeric transaction amount.
+        transactions (list[dict]): Transactions to validate.
 
     Returns:
         dict: A dictionary containing:
             - valid_transactions: Accepted transaction records.
-            - summary: Counts of accepted and rejected records.
-
-    Validation rules:
-        1. Reject missing customer IDs.
-        2. Reject amounts less than or equal to zero.
-        3. Reject duplicate transaction IDs.
-        4. Keep the first valid transaction for each ID.
+            - rejected_transactions: Rejected records with reasons.
+            - summary: Counts of processed and rejected records.
     """
     valid_transactions = [] 
     rejected_transactions = [] 
