@@ -1,5 +1,7 @@
 # Finance Transaction ETL Pipeline 
 
+![Finance ETL Tests](https://github.com/staceyh0/finance-transaction-etl/actions/workflows/tests.yml/badge.svg)
+
 ## Overview 
 A Python ETL pipeline that reads financial transactions from CSV files, validates records, and exports cleaned and rejected transactions separately 
 
