@@ -1,0 +1,11 @@
+transaction_id,customer_id,amount,rejection_reason
+,,,missing_customer_id
+102,,100.0,missing_customer_id
+103,2,-50.0,invalid_amount
+101,3,300.0,duplicate_transaction
+109,9,0.0,invalid_amount
+112,,180.0,missing_customer_id
+114,13,-25.0,invalid_amount
+110,20,200.0,duplicate_transaction
+124,24,0.0,invalid_amount
+126,,275.0,missing_customer_id
