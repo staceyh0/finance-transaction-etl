@@ -12,11 +12,30 @@ A Python ETL pipeline that reads financial transactions from CSV files, validate
 - Rejection, with reason tracking 
 - CSV export 
 - logging and error handling
+- synthetic data generation 
+- PosgreSQL and SQL analysis
+- Data visualization 
 - Testing with pytest 
 
-## PostgreSQL & SQL Analysis
+## Data Quality Validation
+The project uses a synthetic dataset of 1,000 financial transactions. A separate script intentionally introduces invalid records to test the pipeline's validation and rejection logic.
 
-This project includes a PostgreSQL database containing 1,000 synthetically generated financial transactions.
+### Validation Results
+Total transactions: 1,000
+Valid transactions: 970
+Rejected transactions: 30
+Acceptance rate: 97%
+
+### Rejection Breakdown
+Missing customer ID: 10
+Invalid amount: 10
+Missing transaction ID: 5
+Duplicate transaction ID: 5
+
+Rejected transactions are exported separately with a rejection_reason column, allowing invalid records to be inspected without affecting the clean dataset.
+
+## PostgreSQL & SQL Analysis
+This project includes PostgreSQL schema definitions and SQL queries for analyzing synthetic financial transaction data. 
 
 SQL queries were developed to analyze customer transaction activity and identify patterns in transaction value.
 
@@ -33,8 +52,15 @@ View the [SQL analysis queries](sql/analysis.sql).
 
 ## Data Visualizations
 - Top 10 Customers by Transaction Value
+![Top Customers](dashboard/top_customers.png)
 - Transaction Amount Distribution
+![Amount Distribution](dashboard/amount_distribution.png)
 - Top 10 Customers by Transaction Frequency
+![Customer Activity](dashboard/customer_activity.png)
+- Transaction rejections by reason 
+![Rejection Reasons](dashboard/rejection_reasons.png)
+- Transaction validation results
+![Validation Results](dashboard/validation_results.png)
 
 ## Project Structure
 ### Application Modules  
@@ -42,11 +68,14 @@ View the [SQL analysis queries](sql/analysis.sql).
 - cleaning.py: validates transaction records and identifies invalid records (missing customer ids, missing transaction ids, duplicate transaction ids, invalid amounts).
 - export.py: Writes valid and invalid transactions into separate CSV files. 
 
-### Data files 
-- transactions.csv: simulated input transaction data
-- clean_transactions.csv: output file containing valid transactions.  
-- rejected_transactions.csv: output file containing invalid transactions.  
-
+### Data Files
+- `data/transactions.csv`: Small sample dataset used by the original ETL pipeline.
+- `data/clean_transactions.csv`: Valid transactions exported by the original pipeline.
+- `data/rejected_transactions.csv`: Invalid transactions exported with rejection reasons.
+- `data/analytics_transactions.csv`: Original synthetic dataset containing 1,000 valid transactions.
+- `data/analytics_transactions_dirty.csv`: Dataset containing 1,000 transactions, including 30 intentionally invalid records.
+- `data/analytics_clean.csv`: Output containing 970 validated transactions.
+- `data/analytics_rejected.csv`: Output containing 30 rejected transactions with their rejection reasons.
 
 ### Tests
 Contains: 
@@ -56,73 +85,45 @@ Contains:
 - test_pipeline.py: tests complete pipeline
 
 ### main.py
-- main.py: Coordinates ingestion, cleaning, logging, and CSV exports through the run_pipeline() function.
+- main.py: Coordinates ingestion, cleaning, logging, and CSV exports through the run_pipeline() function. Supports configurable input and output paths through command-line arguments using Python's argparse library.
 
-## Financial Transaction Analysis
+# How to Run
+Clone the repository and navigate to the project directory.
 
-### Overview
-This project extends a Python-based ETL pipeline with exploratory data analysis and visualizations using a reproducible synthetic dataset of 1,000 financial transactions across 100 customers.
-
-### Summary Statistics
-| Metric | Value |
-|---|---:|
-| Total Transactions | 1,000 |
-| Unique Customers | 100 |
-| Total Transaction Value | $68,929.62 |
-| Average Transaction Amount | $68.93 |
-| Median Transaction Amount | $54.73 |
-| Largest Transaction | $505.32 |
-
-### Key Findings
-**1. Transaction Amount Distribution**
-The average transaction amount ($68.93) exceeds the median ($54.73), suggesting a right-skewed distribution in which larger transactions increase the mean.
-
-**2. High-Value Transactions**
-The largest transaction ($505.32) is approximately 9.2 times the median, highlighting substantial variation in transaction amounts.
-
-**3. Customer Activity**
-The dataset contains 1,000 transactions across 100 unique customers, averaging 10 transactions per customer. Customer-level aggregations allow further examination of transaction frequency and value concentration.
-
-### Visualizations
-The analysis includes three visualizations:
-
-- Top 10 customers by total transaction value
-- Distribution of transaction amounts
-- Top 10 customers by transaction frequency
-
-### Data Limitations
-All transactions are synthetically generated for educational and portfolio purposes. The findings demonstrate analytical methods and do not represent real financial activity.
-
-
-### Top 10 Customers by Transaction Value
-
-![Top Customers](dashboard/top_customers.png)
-
-### Transaction Amount Distribution
-
-![Amount Distribution](dashboard/amount_distribution.png)
-
-### Customer Transaction Frequency
-
-![Customer Activity](dashboard/customer_activity.png)
-
-## How to Run 
-Clone or download the repository and navigate to the project directory.
-
-Run the pipeline:
-```bash
-python main.py
-```
-
-The pipeline reads data/transactions.csv and generates two output files:
-- data/clean_transactions.csv
-- data/rejected_transactions.csv
-
-## Testing 
-Install pytest if necessary:
+1. Install Dependencies
 ```bash
 python -m pip install -r requirements.txt
 ```
+2. Run the Original ETL Pipeline
+```bash 
+python main.py
+```
+This processes data/transactions.csv and generates:
+data/clean_transactions.csv
+data/rejected_transactions.csv
+
+3. Generate the Dirty Dataset
+```bash
+python -m analytics.generate_dirty_data
+```
+This introduces controlled validation errors into the synthetic analytics dataset.
+
+4. Run pipeline on Analytics Dataset 
+```bash 
+python main.py \
+  --input data/analytics_transactions_dirty.csv \
+  --valid data/analytics_clean.csv \
+  --rejected data/analytics_rejected.csv
+```
+Expected results: 970 valid transactions and 30 rejected transactions.
+
+5. Generate the Dashboard
+```bash
+python -m analytics.visualize
+```
+The generated visualizations are saved in the dashboard/ directory.
+
+## Testing
 Run all automated tests:
 ```bash
 python -m pytest -v

@@ -1,7 +1,12 @@
 import logging
+import argparse
+
 from app.ingestion import read_transactions
 from app.cleaning import clean_transactions
 from app.export import write_transactions
+
+
+logger = logging.getLogger(__name__)
 
 def run_pipeline(input_path, valid_path, rejected_path):
     """
@@ -20,22 +25,18 @@ def run_pipeline(input_path, valid_path, rejected_path):
         dict: Cleaning results containing valid transactions,
         rejected transactions, and processing statistics.
     """
-    logging.basicConfig ( 
-        level = logging.INFO, 
-        format= "%(levelname)s: %(message)s"
-    )
 
-    logging.info("Starting transaction pipeline")
+    logger.info("Starting transaction pipeline")
 
     try: 
         transactions = read_transactions(input_path)
-        logging.info("Read %d transactions", len(transactions))
+        logger.info("Read %d transactions", len(transactions))
     except FileNotFoundError: 
-        logging.exception("Input CSV file was not found.")
+        logger.exception("Input CSV file was not found.")
         raise
 
     result = clean_transactions(transactions)
-    logging.info (
+    logger.info (
         "Cleaning complete: %d valid transactions", 
         result["summary"]["valid_rows"]
     )
@@ -46,28 +47,28 @@ def run_pipeline(input_path, valid_path, rejected_path):
     )
 
     if rejected_rows > 0: 
-        logging.warning(
+        logger.warning(
             "Rejected %d invalid transactions", 
             rejected_rows
         )
         missing_customer_id = result["summary"]["missing_customer_id"]
         if missing_customer_id > 0:
-            logging.warning(
+            logger.warning(
                 "Missing customer ID: %d", missing_customer_id
             )
         invalid = result["summary"]["invalid_amount"]
         if invalid > 0: 
-            logging.warning(
+            logger.warning(
                 "Invalid amount: %d", invalid
             )
         missing_transaction_id = result["summary"]["missing_transaction_id"]
         if missing_transaction_id > 0:
-            logging.warning(
+            logger.warning(
                 "Missing transaction ID: %d", missing_transaction_id
             )
         duplicate = result["summary"]["duplicate_transactions"]
         if duplicate > 0: 
-            logging.warning(
+            logger.warning(
                 "Duplicate transactions: %d", duplicate
             )
     try: 
@@ -75,9 +76,9 @@ def run_pipeline(input_path, valid_path, rejected_path):
             valid_path, 
             result["valid_transactions"], 
         )
-        logging.info("Exported cleaned transactions")
+        logger.info("Exported cleaned transactions")
     except OSError: 
-        logging.exception("Failed to export transactions.")
+        logger.exception("Failed to export transactions.")
         raise 
     try:
         write_transactions(
@@ -90,17 +91,53 @@ def run_pipeline(input_path, valid_path, rejected_path):
                 "rejection_reason",
             ],
         )
-        logging.info("Exported rejected transactions")
+        logger.info("Exported rejected transactions")
     except OSError:
-        logging.exception("Failed to export rejected transactions")
+        logger.exception("Failed to export rejected transactions")
         raise
         
     return result
 
 
-if __name__ == "__main__":
-    run_pipeline(
-        "data/transactions.csv",
-        "data/clean_transactions.csv",
-        "data/rejected_transactions.csv"
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Validate and export financial transactions."
     )
+
+    parser.add_argument(
+        "--input",
+        default="data/transactions.csv",
+        help="Input CSV file path",
+    )
+
+    parser.add_argument(
+        "--valid",
+        default="data/clean_transactions.csv",
+        help="Output path for valid transactions",
+    )
+
+    parser.add_argument(
+        "--rejected",
+        default="data/rejected_transactions.csv",
+        help="Output path for rejected transactions",
+    )
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s: %(message)s"
+    )
+
+    args = parse_args()
+
+    try:
+        run_pipeline(
+            args.input,
+            args.valid,
+            args.rejected
+        )
+    except (OSError, ValueError, KeyError) as exc:
+        logger.error("Pipeline failed: %s", exc)
+        raise SystemExit(1) from exc
