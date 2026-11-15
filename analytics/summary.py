@@ -1,7 +1,6 @@
-
 import pandas as pd
 
-df = pd.read_csv("data/analytics_transactions.csv")
+df = pd.read_csv("data/analytics_transactions_dirty.csv")
 
 print("FINANCIAL TRANSACTION SUMMARY")
 print("-----------------------------")

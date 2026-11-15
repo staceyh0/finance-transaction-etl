@@ -1,5 +1,4 @@
 import logging
-
 from app.ingestion import read_transactions
 from app.cleaning import clean_transactions
 from app.export import write_transactions
